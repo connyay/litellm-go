@@ -17,5 +17,6 @@ import (
 
 type Provider interface {
 	ChatCompletion(ctx context.Context, req openai.ChatCompletionRequest) (*openai.ChatCompletionResponse, error)
+	Embedding(ctx context.Context, req openai.EmbeddingRequest) (*openai.EmbeddingResponse, error)
 	Name() string // for logging/debug
 }

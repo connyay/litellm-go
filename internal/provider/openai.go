@@ -45,3 +45,11 @@ func (p *OpenAIProvider) ChatCompletion(ctx context.Context, req openai.ChatComp
 	}
 	return &resp, nil
 }
+
+func (p *OpenAIProvider) Embedding(ctx context.Context, req openai.EmbeddingRequest) (*openai.EmbeddingResponse, error) {
+	resp, err := p.client.CreateEmbeddings(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}

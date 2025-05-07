@@ -40,6 +40,13 @@ func main() {
 		case "azure":
 			p := provider.NewOpenAIProvider(mc.ModelName, mc.APIBase, key, mc.APIVersion, true)
 			rtr.Register(mc.ModelName, p)
+		case "bedrock":
+			p, err := provider.NewBedrockProvider(mc.ModelName, mc.Deployment)
+			if err != nil {
+				log.Printf("failed to init bedrock provider for %s: %v", mc.ModelName, err)
+				continue
+			}
+			rtr.Register(mc.ModelName, p)
 		default:
 			log.Printf("unknown provider %s for model %s - skipping", mc.Provider, mc.ModelName)
 		}
