@@ -24,9 +24,8 @@ go run ./cmd/server --config examples/config.yaml
 
 See `examples/config.yaml` for available options.
 
-## Roadmap
+## TODO
 
 - [x] Basic router
-- [ ] Streaming support
 - [ ] Metrics / Prometheus
 - [ ] Pluggable auth & logging callbacks 

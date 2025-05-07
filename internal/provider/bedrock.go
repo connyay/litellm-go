@@ -67,7 +67,10 @@ func (p *BedrockProvider) ChatCompletion(ctx context.Context, req openai.ChatCom
 		"top_p":       req.TopP,
 		"stop":        req.Stop,
 	}
-	bodyBytes, _ := json.Marshal(payload)
+	bodyBytes, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
 
 	out, err := p.client.InvokeModel(ctx, &bedrockruntime.InvokeModelInput{
 		Body:        bodyBytes,
@@ -131,10 +134,11 @@ func (p *BedrockProvider) Embedding(ctx context.Context, req openai.EmbeddingReq
 	// Titan embeddings only supports one input at a time; loop over inputs.
 	data := make([]openai.Embedding, 0, len(inputs))
 	for idx, text := range inputs {
-		payload := map[string]interface{}{
-			"inputText": text,
+		payload := map[string]interface{}{"inputText": text}
+		body, err := json.Marshal(payload)
+		if err != nil {
+			return nil, err
 		}
-		body, _ := json.Marshal(payload)
 
 		out, err := p.client.InvokeModel(ctx, &bedrockruntime.InvokeModelInput{
 			Body:        body,
