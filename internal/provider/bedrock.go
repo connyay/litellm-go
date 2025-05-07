@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -109,6 +111,63 @@ func (p *BedrockProvider) ChatCompletion(ctx context.Context, req openai.ChatCom
 	}, nil
 }
 
+func toStringSlice(input any) ([]string, error) {
+	switch v := input.(type) {
+	case []string:
+		return v, nil
+	case string:
+		return []string{v}, nil
+	default:
+		return nil, fmt.Errorf("unsupported input type %v", reflect.TypeOf(input))
+	}
+}
+
 func (p *BedrockProvider) Embedding(ctx context.Context, req openai.EmbeddingRequest) (*openai.EmbeddingResponse, error) {
-	return nil, &openai.APIError{Message: "embedding not implemented for bedrock"}
+	inputs, err := toStringSlice(req.Input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Titan embeddings only supports one input at a time; loop over inputs.
+	data := make([]openai.Embedding, 0, len(inputs))
+	for idx, text := range inputs {
+		payload := map[string]interface{}{
+			"inputText": text,
+		}
+		body, _ := json.Marshal(payload)
+
+		out, err := p.client.InvokeModel(ctx, &bedrockruntime.InvokeModelInput{
+			Body:        body,
+			ModelId:     aws.String(p.modelId),
+			ContentType: aws.String("application/json"),
+			Accept:      aws.String("application/json"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var resp struct {
+			Embedding []float64 `json:"embedding"`
+		}
+		if err := json.Unmarshal(out.Body, &resp); err != nil {
+			return nil, err
+		}
+
+		// convert []float64 to []float32
+		vec := make([]float32, len(resp.Embedding))
+		for i, f := range resp.Embedding {
+			vec[i] = float32(f)
+		}
+
+		data = append(data, openai.Embedding{
+			Index:     idx,
+			Embedding: vec,
+		})
+	}
+
+	return &openai.EmbeddingResponse{
+		Data:  data,
+		Model: req.Model,
+		Usage: openai.Usage{},
+	}, nil
 }
