@@ -1,0 +1,19 @@
+model_list:
+  - model_name: gpt-3.5-turbo
+    provider: openai
+    api_base: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+
+  - model_name: gpt-4o
+    provider: azure
+    api_base: https://myazureopenai.openai.azure.com/openai/deployments/mydeployment
+    api_version: "2023-10-01-preview"
+    deployment_name: mydeployment
+    api_key_env: AZURE_API_KEY
+
+  - model_name: anthropic.claude-v2
+    provider: bedrock
+    deployment_name: anthropic.claude-v2
+
+rate_limit:
+  requests_per_minute: 60 

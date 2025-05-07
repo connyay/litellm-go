@@ -82,7 +82,7 @@ func main() {
 			return
 		}
 
-		prov, ok := rtr.Get(req.Model)
+		prov, ok := rtr.Get(string(req.Model))
 		if !ok {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "model not found"})
 			return
@@ -94,6 +94,25 @@ func main() {
 			return
 		}
 
+		c.JSON(http.StatusOK, resp)
+	})
+
+	engine.POST("/v1/embeddings", func(c *gin.Context) {
+		var req openai.EmbeddingRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		prov, ok := rtr.Get(string(req.Model))
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "model not found"})
+			return
+		}
+		resp, err := prov.Embedding(c.Request.Context(), req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusOK, resp)
 	})
 
